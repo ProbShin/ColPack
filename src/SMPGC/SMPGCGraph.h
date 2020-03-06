@@ -9,23 +9,23 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
-#include <omp.h>
 #include "ColPackHeaders.h" //#include "GraphOrdering.h"
 
-using namespace std;
-
-namespace ColPack {
 // ============================================================================
-// Shared Memory Parallel Graph Coloring Core 
-// ----------------------------------------------------------------------------
+// Author: Xin Cheng
+// Shared Memory Parallel Graph Coloring Core to handle graph IO 
+//
 // the graphs are stored uisng using CSR format. 
 // a, ia, ja. are names inherited from Intel MKL Api
 // usually known as non-zero-values,  col-pointers,  col-values
 // ============================================================================
+
+using namespace std;
+namespace ColPack {
+
 class SMPGCGraph: public SMPGC{
 public: // Constructions
-    SMPGCGraph();
-    SMPGCGraph(const string& fname, const string& format, double*iotime);
+    SMPGCGraph(const string& fname, const string& format, ChronoDuration*iotime);
     virtual ~SMPGCGraph();
 public: // Constructions
     SMPGCGraph(SMPGCGraph&&)=delete;
@@ -38,6 +38,7 @@ public: // APIs
     double avg_degree() const { return m_avg_degree; }
     int    max_degree() const { return m_max_degree; }
     int    min_degree() const { return m_min_degree; }
+    int    num_edges()  const { return m_ja.size()/2; }
 
     const vector<int>&    get_CSR_ia() const { return m_ia; }
     const vector<int>&    get_CSR_ja() const { return m_ja; }
@@ -45,15 +46,15 @@ public: // APIs
     
 
 protected: // implements
-    virtual void do_read_Metis_struct(const string &fname, vector<int>&vi, vector<int>&vj, int*p_maxdeg, int*p_mindeg, double *p_avgdeg, double*iotime);
-    virtual void do_read_MM_struct(const string& fname, vector<int>&vi, vector<int>&vj, int*p_maxdeg, int*p_mindeg, double *p_avgdeg, double*iotime);
+    virtual void do_read_Metis_struct(const string &fname, vector<int>&vi, vector<int>&vj, int*p_maxdeg, int*p_mindeg, double *p_avgdeg, ChronoDuration*iotime);
+    virtual void do_read_MM_struct(const string& fname, vector<int>&vi, vector<int>&vj, int*p_maxdeg, int*p_mindeg, double *p_avgdeg, ChronoDuration* iotime);
     //virtual void do_read_Binary_struct(const string& fname, vector<int>&vi, vector<int>&vj, int *p_maxdeg, int*p_mindeg, double*p_avgdeg, double*iotime);
     //virtual void do_write_Binary_struct(const string& fname, vector<int>&vi, vector<int>&vj, double*iotime);
 
 protected:
     // CSR format, using Intel MKL naming
-    vector<int>    m_ia; //known as verPtr; size: graph size + 1
-    vector<int>    m_ja; //known as verVal; size: nnz
+    vector<int>    m_ia; //known as vtxPtr; size: graph size + 1
+    vector<int>    m_ja; //known as vtxVal; size: nnz
     vector<double> m_a;  //known as nzval;  size: nnz
 
     int    m_max_degree;

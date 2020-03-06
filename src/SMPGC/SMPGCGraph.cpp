@@ -10,9 +10,10 @@ using namespace std;
 using namespace ColPack;
 
 // ============================================================================
+// Author: Xin Cheng
 // Construction
 // ============================================================================
-SMPGCGraph::SMPGCGraph(const string& graph_name, const string& format, double* iotime) {
+SMPGCGraph::SMPGCGraph(const string& graph_name, const string& format, ChronoDuration* iotime) {
     m_graph_name = graph_name;
     if(format=="mm" || format == "MM")
         do_read_MM_struct(m_graph_name, m_ia, m_ja, &m_max_degree, &m_min_degree, &m_avg_degree, iotime);
@@ -25,16 +26,20 @@ SMPGCGraph::SMPGCGraph(const string& graph_name, const string& format, double* i
     }
 }
 
-
+// ============================================================================
+// Author: Xin Cheng
+// Destruction
+// ============================================================================
 SMPGCGraph::~SMPGCGraph(){
 }
 
 // ============================================================================
-// Read MatrixMarket only structure into memory
+// Author: Xin Cheng
+// Read the structure of the MatrixMarket into memory
 // ----------------------------------------------------------------------------
-// Note: store as sparsed CSR format
+// Note: store the matrix as sparsed CSR format
 // ============================================================================
-void SMPGCGraph::do_read_MM_struct(const string& graph_name, vector<int>&ia, vector<int>&ja, int* pMaxDeg, int* pMinDeg, double* pAvgDeg, double* iotime) {
+void SMPGCGraph::do_read_MM_struct(const string& graph_name, vector<int>&ia, vector<int>&ja, int* pMaxDeg, int* pMinDeg, double* pAvgDeg, ChronoDuration* iotime) {
     if(graph_name.empty()) { printf("Error! SMPGCCore() tried to read a graph with empty name.\n"); exit(1); }
 
     bool bSymmetric = true;
@@ -48,7 +53,10 @@ void SMPGCGraph::do_read_MM_struct(const string& graph_name, vector<int>&ia, vec
     ia.clear(); { vector<int> tmp; tmp.swap(ia); } 
     ja.clear(); { vector<int> tmp; tmp.swap(ja); }
 
-    if(iotime) { *iotime=0; *(clock_t *)iotime = -clock(); }
+
+    //if(iotime) { *iotime=0; *(clock_t *)iotime = -clock(); }
+    std::chrono::time_point< std::chrono::steady_clock > start, end;
+    if(iotime) { start = chrono::steady_clock::now(); }
     ifstream in(graph_name.c_str());
     if(!in.is_open()) { printf("Error! SMPGCCore() cannot open \"%s\".\n", graph_name.c_str()); exit(1); }
    
@@ -140,7 +148,8 @@ void SMPGCGraph::do_read_MM_struct(const string& graph_name, vector<int>&ia, vec
     }
     if(pAvgDeg) *pAvgDeg=1.0*(ja.size())/(ia.size()-1);
 
-    if(iotime) { *(clock_t*)iotime += clock(); *iotime = double(*((clock_t*)iotime))/CLOCKS_PER_SEC; }
+    //if(iotime) { *(clock_t*)iotime += clock(); *iotime = double(*((clock_t*)iotime))/CLOCKS_PER_SEC; }
+    if(iotime) { end = std::chrono::steady_clock::now();  *iotime = end-start; }
     return;
 }
 
@@ -148,11 +157,12 @@ void SMPGCGraph::do_read_MM_struct(const string& graph_name, vector<int>&ia, vec
 
 
 // ============================================================================
+// Author: Xin Cheng
 // Read Metis no weight (structure) graph into memory as CSR format (ia,ja)
 // ----------------------------------------------------------------------------
 // Note: store as sparsed CSR format
 // ============================================================================
-void SMPGCGraph::do_read_Metis_struct(const string& graph_name, vector<int>&ia, vector<int>&ja, int* pMaxDeg, int* pMinDeg, double* pAvgDeg, double* iotime) {
+void SMPGCGraph::do_read_Metis_struct(const string& graph_name, vector<int>&ia, vector<int>&ja, int* pMaxDeg, int* pMinDeg, double* pAvgDeg, ChronoDuration* iotime) {
     if(graph_name.empty()) { printf("Error! SMPGCCore() tried to read a graph with empty name.\n"); exit(1); }
     int  edges_expect  = 0;
     int  nodes_expect  = 0;
@@ -165,7 +175,9 @@ void SMPGCGraph::do_read_Metis_struct(const string& graph_name, vector<int>&ia, 
     ia.clear(); { vector<int> tmp; tmp.swap(ia); } 
     ja.clear(); { vector<int> tmp; tmp.swap(ja); }
 
-    if(iotime) { *iotime=0; *(clock_t *)iotime = -clock(); }
+    //if(iotime) { *iotime=0; *(clock_t *)iotime = -clock(); }
+    std::chrono::time_point<std::chrono::steady_clock> start,end;
+    if(iotime) { start = std::chrono::steady_clock::now(); }
     ifstream in(graph_name.c_str());
     if(!in.is_open()) { printf("Error! SMPGCCore() cannot open \"%s\".\n", graph_name.c_str()); exit(1); }
    
@@ -225,7 +237,8 @@ void SMPGCGraph::do_read_Metis_struct(const string& graph_name, vector<int>&ia, 
     }
     if(pAvgDeg) *pAvgDeg=1.0*(ja.size())/(ia.size()-1);
 
-    if(iotime) { *(clock_t*)iotime += clock(); *iotime = double(*((clock_t*)iotime))/CLOCKS_PER_SEC; }
+    //if(iotime) { *(clock_t*)iotime += clock(); *iotime = double(*((clock_t*)iotime))/CLOCKS_PER_SEC; }
+    if(iotime) { end = std::chrono::steady_clock::now();  *iotime = end - start; }
     return;
 }
 

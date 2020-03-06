@@ -8,7 +8,10 @@
 #ifndef SMPGCDEFINE_H
 #define SMPGCDEFINE_H
 #include <string>
+#include <chrono>
+#include <random>
 // ============================================================================
+// Author: Xin Cheng
 // SMPGC: Shared Memory Parallel Graph Coloring
 // ----------------------------------------------------------------------------
 // **OVERVIEW**
@@ -19,23 +22,12 @@
 //          |-> D2SMPGCColoring:     D2 Coloring
 //
 // ----------------------------------------------------------------------------
-// **LIST OF ALGORITHMS**
-// * GM's Algorithm: Gebremedhin and Manne[1].
-// * IP's Algorithm: Catalyurek Feo Gebremedhin and Halappanavar[2]
-// * JP's Algorithm: Jones and Plassmann[3]
-// * Luby's Alg
-// ...
-// ...
-// ----------------------------------------------------------------------------
-// **LIST OF PAPERS**
-// [1] Scalable Parallel Graph Coloring Algorithms
-// [2] Grah coloring algorithms for multi-core and massively multithreaded architectures
-// [3] A Parallel Graph Coloring Heuristic
 // ...
 // ...
 // ============================================================================
 
 class SMPGC{
+public:    typedef std::chrono::duration<double> ChronoDuration;         //display time using double number in the second unit   
 //public: // in comman Computer is LP64 Model. change the following in case not. 
     //typedef unsigned long long int uint64;
     //typedef          long long int  int64;
@@ -65,20 +57,28 @@ public:
     static const int ORDER_LARGEST_FIRST = 3;
     static const int ORDER_SMALLEST_LAST = 4;
 
-    static const int HYBRID_GM3P         = 1;
-    static const int HYBRID_GMMP         = 2;
-    static const int HYBRID_SERIAL       = 3;
-    static const int HYBRID_STREAM       = 4;
+    static const int ISI_WEIGHT_RAND     = 0;
+    static const int ISI_WEIGHT_DEGREE   = 1;
+
+    //static const int HYBRID_GM3P         = 1;
+    //static const int HYBRID_GMMP         = 2;
+    //static const int HYBRID_SERIAL       = 3;
+    //static const int HYBRID_STREAM       = 4;
 
 
 public:
-    SMPGC(){};
+    SMPGC(): m_mt(RAND_SEED) {};
     ~SMPGC(){};
 public:
     SMPGC(SMPGC&&)=delete;
     SMPGC(const SMPGC&)=delete;
     SMPGC& operator=(SMPGC&&)=delete;
     SMPGC& operator=(const SMPGC&)=delete;
+
+protected:
+    std::mt19937     m_mt;  //random machine moved from Ordering
+public:
+    void set_rseed(const int x){ m_mt.seed(x); }
 };
 
 

@@ -20,8 +20,12 @@ const int SMPGC::ORDER_RANDOM       ;
 const int SMPGC::ORDER_LARGEST_FIRST;
 const int SMPGC::ORDER_SMALLEST_LAST;
 
-const int SMPGC::HYBRID_GM3P        ;
-const int SMPGC::HYBRID_GMMP        ;
-const int SMPGC::HYBRID_SERIAL      ;
-const int SMPGC::HYBRID_STREAM      ;
+//const int SMPGC::HYBRID_GM3P        ;
+//const int SMPGC::HYBRID_GMMP        ;
+//const int SMPGC::HYBRID_SERIAL      ;
+//const int SMPGC::HYBRID_STREAM      ;
+
+const int ISI_WEIGHT_RAND     = 0;
+const int ISI_WEIGHT_DEGREE   = 1;
+
 

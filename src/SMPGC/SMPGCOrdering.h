@@ -7,42 +7,30 @@
 #define SMPGCORDERING_H
 #include <vector>
 #include <iostream>
+#include <unordered_set>
+#include <unordered_map>
+#include <algorithm>
 #include <omp.h>
+
 #include "ColPackHeaders.h" //#include "GraphOrdering.h"
 #include "SMPGCGraph.h"
-#include <random>
-#include <algorithm>
-
 using namespace std;
 
 namespace ColPack {
 
-//=============================================================================
-// Shared Memeory Parallel (Greedy)/Graph Coloring -> SMPGC
-// ----------------------------------------------------------------------------
-// 
-// SMPGC includes three main algorithms
-// * GM's Algorithm: Gebremedhin and Manne[1].
-// * IP's Algorithm: Catalyurek Feo Gebremedhin and Halappanavar[2]
-// * JP's Algorithm: Jones and Plassmann[3]
-// * Luby's Alg
-// * JP-LF
-// * JP_SL
-// ----------------------------------------------------------------------------
-// [1] Scalable Parallel Graph Coloring Algorithms
-// [2] Grah coloring algorithms for multi-core and massively multithreaded architectures
-// [3] A Parallel Graph Coloring Heuristic
-//=============================================================================
-    
-
-
-
 // ============================================================================
+// Author: Xin Cheng
 // Shared Memory Parallel Greedy/Graph Coloring Ordering wrap
+// 
+// includes 
+//      [sequential, parallel], 
+//      [whole vertex, subset vertex, prepartitioned vertex],
+//      [natural, random, largest degree first, smallest degree last]
+//
 // ============================================================================
 class SMPGCOrdering : public SMPGCGraph {
 public: // construction
-    SMPGCOrdering(const string& file_name, const string& fmt, double*iotime, const string& order, double *ordtime);
+    SMPGCOrdering(const string& file_name, const string& fmt, ChronoDuration*iotime, const int order, ChronoDuration* ordtime=nullptr);
     virtual ~SMPGCOrdering();
 
 public: // deplete construction
@@ -51,37 +39,52 @@ public: // deplete construction
     SMPGCOrdering& operator=(SMPGCOrdering&&)=delete;
     SMPGCOrdering& operator=(const SMPGCOrdering&)=delete;
 
-public: // API: global ordering
-    void global_ordering(const string& order, double*t);
-    const vector<int>& global_ordered_vertex() const { return m_global_ordered_vertex; }
-    const string&      global_ordered_method() const { return m_global_ordered_method; }
-    void set_rseed(const int x){ m_mt.seed(x); }
+public: // API: interface
+    void ordering(
+            const string&s1="SEQ", 
+            const string& s2="WHOLE", 
+            const int order=ORDER_NATURAL, 
+            ChronoDuration* t=nullptr, 
+            void* parg=nullptr
+            );
+    const vector<int>& get_ordered_vertex() const { return m_ordered_vertex; }
+    const int          get_ordered_method() const { return m_ordered_method; }
 
+    void   Translate_OrderId_To_OrderTag(const int LOCAL_ORDER, string&lotag);
+    string Translate_OrderId_To_OrderTag(const int LOCAL_ORDER);
 protected:
-    void global_natural_ordering();
-    void global_random_ordering();
-    void global_largest_degree_first_ordering();
+    // sequential ordering on the whole graphs
+    void seq_whole_ntr_ordering(ChronoDuration* ordtime=nullptr);
+    void seq_whole_rnd_ordering(ChronoDuration* ordtime=nullptr);
+    void seq_whole_ldf_ordering(ChronoDuration* ordtime=nullptr);
+    void seq_whole_sdl_ordering(ChronoDuration* ordtime=nullptr);
 
-protected: // API: local ordering
-    void local_natural_ordering(vector<int>& vtxs);
-    void local_random_ordering (vector<int>& vtxs);
-    void local_largest_degree_first_ordering(vector<int>& vtxs); 
-    void local_largest_degree_first_ordering(vector<int>& vtxs, const int beg, const int end); 
-    void local_smallest_degree_last_ordering(vector<int>& vtxs);
-    void local_smallest_degree_last_ordering_B1a(vector<int>& vtxs);
+    // sequential ordering on the subset of the graphs 
+    void seq_subset_ntr_ordering(vector<int>& Q,ChronoDuration* ordtime=nullptr);
+    void seq_subset_rnd_ordering(vector<int>& Q,ChronoDuration* ordtime=nullptr);
+    void seq_subset_ldf_ordering(vector<int>& Q,ChronoDuration* ordtime=nullptr);
+    void seq_subset_sdl_ordering(vector<int>& Q,ChronoDuration* ordtime=nullptr);
+
+    // parallel ordering on the whole graphs
+    void omp_whole_ntr_ordering(ChronoDuration* ordtime=nullptr);
+    void omp_whole_rnd_ordering(ChronoDuration* ordtime=nullptr);
+    void omp_whole_ldf_ordering(ChronoDuration* ordtime=nullptr);
+    void omp_whole_sdl_ordering(ChronoDuration* ordtime=nullptr);
     
-    //void SmallestDegreeLastOrdering(vector<INT>& vtxs, INT N);
+    // parallel ordering on the prepartitioned graphs
+    void omp_prepartition_ntr_ordering(vector<vector<int>>&QQ,ChronoDuration* ordtime=nullptr);
+    void omp_prepartition_rnd_ordering(vector<vector<int>>&QQ,ChronoDuration* ordtime=nullptr);
+    void omp_prepartition_ldf_ordering(vector<vector<int>>&QQ,ChronoDuration* ordtime=nullptr);
+    void omp_prepartition_sdl_ordering(vector<vector<int>>&QQ,ChronoDuration* ordtime=nullptr);
+
     //void DynamicLargestDegreeFirstOrdering(vector<INT>& vtxs, INT N);
     //void IncidenceDegreeOrdering(vector<INT>& vtxs, INT N);
     //void LogOrdering(vector<INT>& vtxs, INT N);
 
 protected: // members
-    vector<int> m_global_ordered_vertex;   
-    string      m_global_ordered_method;
-    mt19937     m_mt;
+    vector<int> m_ordered_vertex;  // used to store the whole ordered vertex   
+    int      m_ordered_method;  // tags of the whole ordered vertex
 };
-
-
 
 
 }// endof namespace ColPack
